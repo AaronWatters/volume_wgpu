@@ -41,9 +41,9 @@ class GPUContext:
     def load_fragment(self, path: str) -> str:
         return (self.package / "shaders" / path).read_text(encoding="utf-8")
 
-    def load_shader(self, device: Any, *paths: str) -> Any:
+    def load_shader(self, *paths: str) -> Any:
         combined_shader_source = "".join(self.load_fragment(path) for path in paths)
-        return device.create_shader_module(code=combined_shader_source)
+        return self.device.create_shader_module(code=combined_shader_source)
 
     @property
     def adapter_info(self) -> dict[str, Any]:

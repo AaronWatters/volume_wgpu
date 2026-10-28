@@ -25,8 +25,9 @@ def test_load_shader_concatenates_fragments_and_compiles(tmp_path: Path):
     context = GPUContext.__new__(GPUContext)
     context.package = package_path
     device = _FakeShaderDevice()
+    context.device = device
 
-    compiled = context.load_shader(device, "one.wgsl", "two.wgsl")
+    compiled = context.load_shader("one.wgsl", "two.wgsl")
 
     assert compiled == {"compiled": "first\nsecond\n"}
     assert device.code == "first\nsecond\n"
@@ -74,10 +75,10 @@ class _FakeContext:
     def __init__(self, device: _FakeDevice):
         self.device = device
         self.shader_module = object()
-        self.calls: list[tuple[Any, tuple[str, ...]]] = []
+        self.calls: list[tuple[str, ...]] = []
 
-    def load_shader(self, device: Any, *paths: str) -> object:
-        self.calls.append((device, paths))
+    def load_shader(self, *paths: str) -> object:
+        self.calls.append(paths)
         return self.shader_module
 
 
@@ -86,6 +87,6 @@ def test_incrementer_uses_context_load_shader():
     context = _FakeContext(device)
     incrementer = Incrementer(shape=(1, 1, 1), context=context)
 
-    assert context.calls == [(device, ("increment.wgsl",))]
+    assert context.calls == [("increment.wgsl",)]
     assert incrementer.shader_module is context.shader_module
     assert incrementer.pipeline["compute"]["module"] is context.shader_module
