@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.resources as resources
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -17,6 +18,7 @@ class GPUContext:
 
     adapter: Any | None = None
     device: Any | None = None
+    package: Any | None = None
 
     def __post_init__(self) -> None:
         if self.adapter is None:
@@ -33,6 +35,15 @@ class GPUContext:
             if os.environ.get("WGPU_REQUIRE_GPU") == "1":
                 raise GPUUnavailableError(reason)
             raise GPUUnavailableError(reason)
+        if self.package is None:
+            self.package = resources.files("volume_wgpu")
+
+    def load_fragment(self, path: str) -> str:
+        return (self.package / "shaders" / path).read_text(encoding="utf-8")
+
+    def load_shader(self, device: Any, *paths: str) -> Any:
+        combined_shader_source = "".join(self.load_fragment(path) for path in paths)
+        return device.create_shader_module(code=combined_shader_source)
 
     @property
     def adapter_info(self) -> dict[str, Any]:

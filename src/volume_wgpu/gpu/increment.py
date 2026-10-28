@@ -6,7 +6,6 @@ import numpy as np
 import wgpu
 
 from ..context import GPUContext
-from ..helpers import load_shader
 
 
 WORKGROUP_SIZE = 64
@@ -41,7 +40,7 @@ class Incrementer:
         if self.volume_size > self.device.limits["max-buffer-size"]:
             raise ValueError("Volume is too large for this device's maximum buffer size.")
 
-        self.shader_module = load_shader(self.device, "increment.wgsl")
+        self.shader_module = self.context.load_shader(self.device, "increment.wgsl")
         self.input_buffer = self.device.create_buffer(
             size=self.volume_size * np.dtype(np.float32).itemsize,
             usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC | wgpu.BufferUsage.COPY_DST,

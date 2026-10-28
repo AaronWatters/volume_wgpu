@@ -3,8 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import volume_wgpu.gpu.increment as increment_module
-import volume_wgpu.helpers as helpers_module
+from volume_wgpu.context import GPUContext
 from volume_wgpu.gpu.increment import Incrementer
 
 
@@ -17,16 +16,17 @@ class _FakeShaderDevice:
         return {"compiled": code}
 
 
-def test_load_shader_concatenates_fragments_and_compiles(monkeypatch, tmp_path: Path):
+def test_load_shader_concatenates_fragments_and_compiles(tmp_path: Path):
     package_path = tmp_path / "volume_wgpu"
     shaders_path = package_path / "shaders"
     shaders_path.mkdir(parents=True)
     (shaders_path / "one.wgsl").write_text("first\n", encoding="utf-8")
     (shaders_path / "two.wgsl").write_text("second\n", encoding="utf-8")
-    monkeypatch.setattr(helpers_module.resources, "files", lambda _name: package_path)
+    context = GPUContext.__new__(GPUContext)
+    context.package = package_path
     device = _FakeShaderDevice()
 
-    compiled = helpers_module.load_shader(device, "one.wgsl", "two.wgsl")
+    compiled = context.load_shader(device, "one.wgsl", "two.wgsl")
 
     assert compiled == {"compiled": "first\nsecond\n"}
     assert device.code == "first\nsecond\n"
@@ -73,21 +73,19 @@ class _FakeDevice:
 class _FakeContext:
     def __init__(self, device: _FakeDevice):
         self.device = device
+        self.shader_module = object()
+        self.calls: list[tuple[Any, tuple[str, ...]]] = []
+
+    def load_shader(self, device: Any, *paths: str) -> object:
+        self.calls.append((device, paths))
+        return self.shader_module
 
 
-def test_incrementer_uses_load_shader(monkeypatch):
+def test_incrementer_uses_context_load_shader():
     device = _FakeDevice()
-    shader_module = object()
-    calls: list[tuple[Any, tuple[str, ...]]] = []
+    context = _FakeContext(device)
+    incrementer = Incrementer(shape=(1, 1, 1), context=context)
 
-    def fake_load_shader(dev: Any, *fragments: str) -> object:
-        calls.append((dev, fragments))
-        return shader_module
-
-    monkeypatch.setattr(increment_module, "load_shader", fake_load_shader)
-
-    incrementer = Incrementer(shape=(1, 1, 1), context=_FakeContext(device))
-
-    assert calls == [(device, ("increment.wgsl",))]
-    assert incrementer.shader_module is shader_module
-    assert incrementer.pipeline["compute"]["module"] is shader_module
+    assert context.calls == [(device, ("increment.wgsl",))]
+    assert incrementer.shader_module is context.shader_module
+    assert incrementer.pipeline["compute"]["module"] is context.shader_module
