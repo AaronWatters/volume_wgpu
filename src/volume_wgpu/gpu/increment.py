@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import importlib.resources as resources
 from typing import Any
 
 import numpy as np
 import wgpu
 
 from ..context import GPUContext
+from ..helpers import load_shader
 
 
 WORKGROUP_SIZE = 64
@@ -41,8 +41,7 @@ class Incrementer:
         if self.volume_size > self.device.limits["max-buffer-size"]:
             raise ValueError("Volume is too large for this device's maximum buffer size.")
 
-        shader_code = self._load_shader()
-        self.shader_module = self.device.create_shader_module(code=shader_code)
+        self.shader_module = load_shader(self.device, "increment.wgsl")
         self.input_buffer = self.device.create_buffer(
             size=self.volume_size * np.dtype(np.float32).itemsize,
             usage=wgpu.BufferUsage.STORAGE | wgpu.BufferUsage.COPY_SRC | wgpu.BufferUsage.COPY_DST,
@@ -82,12 +81,6 @@ class Incrementer:
                 "entry_point": "main",
             },
         )
-
-    @staticmethod
-    def _load_shader() -> str:
-        package = resources.files("volume_wgpu")
-        shader_text = (package / "shaders" / "increment.wgsl").read_text(encoding="utf-8")
-        return shader_text
 
     def _validate_input(self, input_volume: np.ndarray, increment: Any) -> tuple[np.ndarray, np.float32]:
         volume = _validate_volume(input_volume)
