@@ -21,8 +21,8 @@ class DepthBufferGeometry:
             dy: float = 1.0,):
         self.context = context
         self.buffer = UniformBuffer(context, f32size=6)
-        self.width = width
-        self.height = height
+        self.width = int(width)
+        self.height = int(height)
         self.x0 = x0
         self.y0 = y0
         self.dx = dx
@@ -58,7 +58,7 @@ class DepthBuffer:
     def init(self, context: GPUContext, geometry: DepthBufferGeometry):
         self.context = context
         self.geometry = geometry
-        self.f32size = geometry.width * geometry.height
+        self.f32size = int(geometry.width * geometry.height)
         self.data_buffer = StorageBuffer(context, f32size=self.f32size)
         self.depth_buffer = StorageBuffer(context, f32size=self.f32size)
         self.my_layout = self.binding_group_layout()
