@@ -2,7 +2,7 @@
 @group(0) @binding(1) var<uniform> geometry: DepthBufferGeometry;
 
 @compute @workgroup_size(1)
-fn depth_buffer_extent_test() {
+fn depth_buffer_geometry_test() {
     let extent = L_extent(
         vec3<f32>(4.0, 5.0, 0.0),
         vec3<f32>(6.0, 8.0, 0.0),

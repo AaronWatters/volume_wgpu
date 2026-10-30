@@ -24,7 +24,7 @@ def test_depth_buffer_shader_extent(gpu_context):
     output = StorageBuffer(gpu_context, f32size=4)
     geometry = UniformBuffer(gpu_context, f32size=6)
     geometry.write(np.array([100.0, 100.0, 3.0, 4.0, 1.0, 1.0], dtype=np.float32))
-    shader_module = gpu_context.load_shader("depth_buffer.wgsl", "depth_buffer_test.wgsl")
+    shader_module = gpu_context.load_shader("depth_buffer.wgsl", "depth_buffer_geometry_test.wgsl")
     layout = gpu_context.device.create_bind_group_layout(
         entries=[
             output.bind_group_layout_entry(0),
@@ -33,7 +33,7 @@ def test_depth_buffer_shader_extent(gpu_context):
     )
     pipeline = gpu_context.device.create_compute_pipeline(
         layout=gpu_context.device.create_pipeline_layout(bind_group_layouts=[layout]),
-        compute={"module": shader_module, "entry_point": "depth_buffer_extent_test"},
+        compute={"module": shader_module, "entry_point": "depth_buffer_geometry_test"},
     )
     bind_group = gpu_context.device.create_bind_group(
         layout=layout,
