@@ -30,9 +30,7 @@ class Buffer:
         """Return a dictionary suitable for use in a bind group entry."""
         return {
             "binding": binding,
-            "resource": {"buffer": self.buffer},
-            "offset": 0,
-            "size": self.bytesize,
+            "resource": {"buffer": self.buffer, "offset": 0, "size": self.bytesize},
         }
     def bind_group_layout_entry(self, binding: int, type: str) -> dict[str, Any]:
         """Return a dictionary suitable for use in a bind group layout entry."""
