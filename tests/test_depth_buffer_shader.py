@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from volume_wgpu import GPUContext
-from volume_wgpu.buffer import StorageBuffer
+from volume_wgpu.buffer import StorageBuffer, UniformBuffer
 
 
 @pytest.fixture(scope="session")
@@ -22,9 +22,14 @@ def gpu_context():
 @pytest.mark.gpu
 def test_depth_buffer_shader_extent(gpu_context):
     output = StorageBuffer(gpu_context, f32size=4)
+    geometry = UniformBuffer(gpu_context, f32size=6)
+    geometry.write(np.array([100.0, 100.0, 3.0, 4.0, 1.0, 1.0], dtype=np.float32))
     shader_module = gpu_context.load_shader("depth_buffer.wgsl", "depth_buffer_test.wgsl")
     layout = gpu_context.device.create_bind_group_layout(
-        entries=[output.bind_group_layout_entry(0)]
+        entries=[
+            output.bind_group_layout_entry(0),
+            geometry.bind_group_layout_entry(1),
+        ]
     )
     pipeline = gpu_context.device.create_compute_pipeline(
         layout=gpu_context.device.create_pipeline_layout(bind_group_layouts=[layout]),
@@ -32,7 +37,10 @@ def test_depth_buffer_shader_extent(gpu_context):
     )
     bind_group = gpu_context.device.create_bind_group(
         layout=layout,
-        entries=[{"binding": 0, "resource": {"buffer": output.buffer}}],
+        entries=[
+            {"binding": 0, "resource": {"buffer": output.buffer}},
+            {"binding": 1, "resource": {"buffer": geometry.buffer}},
+        ],
     )
     encoder = gpu_context.device.create_command_encoder()
     compute_pass = encoder.begin_compute_pass()
