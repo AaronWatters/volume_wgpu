@@ -19,17 +19,20 @@ fn main(@builtin(global_invocation_id) global_id: vec3<u32>) {
   let b_location = L_location(vec3<u32>(offset_to_L(b_offset, geometry_b), 0u), geometry_b);
   let b_start = b_location.X;
   let b_end = b_start + vec3<f32>(geometry_b.dx, geometry_b.dy, 0.0);
-  let a_extent = LD_extent(
-    X_location(b_start, geometry_a),
-    X_location(b_end, geometry_a),
-  );
+  // Previously, mapping both endpoints with integer truncation skipped or
+  // included the wrong A cell at resolution boundaries.
+  // Map the B cell's half-open interval to the inclusive A index range.
+  let a_x_min = i32(floor((b_start.x - geometry_a.x0) / geometry_a.dx));
+  let a_x_max = i32(ceil((b_end.x - geometry_a.x0) / geometry_a.dx)) - 1;
+  let a_y_min = i32(floor((b_start.y - geometry_a.y0) / geometry_a.dy));
+  let a_y_max = i32(ceil((b_end.y - geometry_a.y0) / geometry_a.dy)) - 1;
 
   var best_depth = depth_b[b_offset];
   var best_data = data_b[b_offset];
   let a_width = i32(geometry_a.width);
   let a_height = i32(geometry_a.height);
-  for (var a_y = i32(a_extent.y); a_y < i32(a_extent.w); a_y++) {
-    for (var a_x = i32(a_extent.x); a_x < i32(a_extent.z); a_x++) {
+  for (var a_y = a_y_min; a_y <= a_y_max; a_y++) {
+    for (var a_x = a_x_min; a_x <= a_x_max; a_x++) {
       if (a_x < 0 || a_y < 0 || a_x >= a_width || a_y >= a_height) {
         continue;
       }
