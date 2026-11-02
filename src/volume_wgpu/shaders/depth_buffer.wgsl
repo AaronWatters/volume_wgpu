@@ -82,3 +82,9 @@ fn L_extent(X1: vec3<f32>, X2: vec3<f32>, geometry: DepthBufferGeometry) -> vec4
     let L_max = vec2<u32>(max(L1.x, L2.x), max(L1.y, L2.y));
     return vec4<u32>(L_min.x, L_min.y, L_max.x, L_max.y);
 };
+
+fn LD_extent(location1: DepthBufferLocation, location2: DepthBufferLocation) -> vec4<u32> {
+    let L_min = vec2<u32>(min(location1.L.x, location2.L.x), min(location1.L.y, location2.L.y));
+    let L_max = vec2<u32>(max(location1.L.x, location2.L.x), max(location1.L.y, location2.L.y));
+    return vec4<u32>(L_min.x, L_min.y, L_max.x, L_max.y);
+};

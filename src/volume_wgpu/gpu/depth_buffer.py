@@ -21,8 +21,8 @@ class DepthBufferGeometry:
             dy: float = 1.0,):
         self.context = context
         self.buffer = UniformBuffer(context, f32size=6)
-        self.width = width
-        self.height = height
+        self.width = int(width)
+        self.height = int(height)
         self.x0 = x0
         self.y0 = y0
         self.dx = dx
@@ -58,30 +58,32 @@ class DepthBuffer:
     def init(self, context: GPUContext, geometry: DepthBufferGeometry):
         self.context = context
         self.geometry = geometry
-        self.f32size = geometry.width * geometry.height
+        self.f32size = int(geometry.width * geometry.height)
         self.data_buffer = StorageBuffer(context, f32size=self.f32size)
         self.depth_buffer = StorageBuffer(context, f32size=self.f32size)
         self.my_layout = self.binding_group_layout()
         self.my_group = self.binding_group(layout=self.my_layout)
 
-    def binding_group_layout(self):
+    def binding_group_layout(self, with_geometry: bool = True):
         device = self.context.device
         entries = [
             self.data_buffer.bind_group_layout_entry(0),
             self.depth_buffer.bind_group_layout_entry(1),
-            self.geometry.bind_group_layout_entry(2),
         ]
+        if with_geometry:
+            entries.append(self.geometry.bind_group_layout_entry(2))
         return device.create_bind_group_layout(entries=entries)
 
-    def binding_group(self, layout=None):
+    def binding_group(self, layout=None, with_geometry: bool = True):
         device = self.context.device
         entries = [
             self.data_buffer.binding_group_entry(0),
             self.depth_buffer.binding_group_entry(1),
-            self.geometry.binding_group_entry(2),
         ]
+        if with_geometry:
+            entries.append(self.geometry.binding_group_entry(2))
         if layout is None:
-            layout = self.binding_group_layout()
+            layout = self.binding_group_layout(with_geometry=with_geometry)
         return device.create_bind_group(layout=layout, entries=entries)
 
     def write_data(self, data: np.ndarray) -> None:
@@ -109,3 +111,25 @@ class DepthBuffer:
         if reshape:
             depth = self.reshape_buffer_array(depth)
         return depth
+
+    def copy_buffers(self, to_other: "DepthBuffer") -> None:
+        """Copy this depth buffer's data and depth buffers to another depth buffer."""
+        if self.context is not to_other.context:
+            raise ValueError("Both depth buffers must use the same GPU context.")
+        size = self.data_buffer.bytesize
+        encoder = self.context.device.create_command_encoder()
+        encoder.copy_buffer_to_buffer(
+            self.data_buffer.buffer,
+            0,
+            to_other.data_buffer.buffer,
+            0,
+            size,
+        )
+        encoder.copy_buffer_to_buffer(
+            self.depth_buffer.buffer,
+            0,
+            to_other.depth_buffer.buffer,
+            0,
+            size,
+        )
+        self.context.device.queue.submit([encoder.finish()])

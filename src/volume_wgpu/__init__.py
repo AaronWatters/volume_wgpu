@@ -2,5 +2,6 @@
 
 from .context import GPUContext
 from .gpu.increment import Incrementer
+from .gpu.combine_overlap import DepthBufferCombinerStage, create_depth_buffer
 
-__all__ = ["GPUContext", "Incrementer"]
+__all__ = ["GPUContext", "Incrementer", "DepthBufferCombinerStage", "create_depth_buffer"]
