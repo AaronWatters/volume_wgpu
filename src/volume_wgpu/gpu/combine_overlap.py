@@ -67,11 +67,13 @@ class DepthBufferCombinerStage:
             with_geometry=False,
         )
 
-    def combine(self) -> None:
+    def combine(self, encoder=None) -> None:
         """Copy B to the output and combine the overlapping A pixels into it."""
-        self.depth_buffer_b.copy_buffers(self.output_depth_buffer)
-        encoder = self.device.create_command_encoder()
-        compute_pass = encoder.begin_compute_pass()
+        my_encoder = encoder
+        if my_encoder is None:
+            my_encoder = self.device.create_command_encoder()
+        self.depth_buffer_b.copy_buffers(self.output_depth_buffer, encoder=my_encoder)
+        compute_pass = my_encoder.begin_compute_pass()
         compute_pass.set_pipeline(self.pipeline)
         compute_pass.set_bind_group(0, self.depth_buffer_a.my_group)
         compute_pass.set_bind_group(1, self.depth_buffer_b.my_group)
@@ -79,7 +81,8 @@ class DepthBufferCombinerStage:
         output_size = int(self.depth_buffer_b.geometry.width * self.depth_buffer_b.geometry.height)
         compute_pass.dispatch_workgroups((output_size + WORKGROUP_SIZE - 1) // WORKGROUP_SIZE)
         compute_pass.end()
-        self.device.queue.submit([encoder.finish()])
+        if encoder is None:
+            self.device.queue.submit([my_encoder.finish()])
 
     def get_output(self) -> DepthBuffer:
         return self.output_depth_buffer

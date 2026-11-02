@@ -112,24 +112,27 @@ class DepthBuffer:
             depth = self.reshape_buffer_array(depth)
         return depth
 
-    def copy_buffers(self, to_other: "DepthBuffer") -> None:
+    def copy_buffers(self, to_other: "DepthBuffer", encoder=None) -> None:
         """Copy this depth buffer's data and depth buffers to another depth buffer."""
         if self.context is not to_other.context:
             raise ValueError("Both depth buffers must use the same GPU context.")
         size = self.data_buffer.bytesize
-        encoder = self.context.device.create_command_encoder()
-        encoder.copy_buffer_to_buffer(
-            self.data_buffer.buffer,
+        my_encoder = encoder
+        if encoder is None:
+            my_encoder = self.context.device.create_command_encoder()
+        my_encoder.copy_buffer_to_buffer(
+                self.data_buffer.buffer,
             0,
             to_other.data_buffer.buffer,
             0,
             size,
         )
-        encoder.copy_buffer_to_buffer(
+        my_encoder.copy_buffer_to_buffer(
             self.depth_buffer.buffer,
             0,
             to_other.depth_buffer.buffer,
             0,
             size,
         )
-        self.context.device.queue.submit([encoder.finish()])
+        if encoder is None:
+            self.context.device.queue.submit([my_encoder.finish()])
