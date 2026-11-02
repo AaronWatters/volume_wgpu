@@ -10,7 +10,7 @@ from volume_wgpu.gpu.depth_buffer import DepthBufferGeometry
 
 def main() -> None:
     examples_dir = Path(__file__).parent
-    image = np.array(Image.open(examples_dir / "mandrill.png").convert("L"), dtype=np.float32)
+    image = np.array(Image.open(examples_dir / "mandrill.png").convert("RGB").getchannel("R"))
     height, width = image.shape
     context = GPUContext()
     geometry_a = DepthBufferGeometry(context, width, height, dx=1.0 / width, dy=1.0 / height)
