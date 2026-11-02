@@ -64,24 +64,26 @@ class DepthBuffer:
         self.my_layout = self.binding_group_layout()
         self.my_group = self.binding_group(layout=self.my_layout)
 
-    def binding_group_layout(self):
+    def binding_group_layout(self, with_geometry: bool = True):
         device = self.context.device
         entries = [
             self.data_buffer.bind_group_layout_entry(0),
             self.depth_buffer.bind_group_layout_entry(1),
-            self.geometry.bind_group_layout_entry(2),
         ]
+        if with_geometry:
+            entries.append(self.geometry.bind_group_layout_entry(2))
         return device.create_bind_group_layout(entries=entries)
 
-    def binding_group(self, layout=None):
+    def binding_group(self, layout=None, with_geometry: bool = True):
         device = self.context.device
         entries = [
             self.data_buffer.binding_group_entry(0),
             self.depth_buffer.binding_group_entry(1),
-            self.geometry.binding_group_entry(2),
         ]
+        if with_geometry:
+            entries.append(self.geometry.binding_group_entry(2))
         if layout is None:
-            layout = self.binding_group_layout()
+            layout = self.binding_group_layout(with_geometry=with_geometry)
         return device.create_bind_group(layout=layout, entries=entries)
 
     def write_data(self, data: np.ndarray) -> None:

@@ -50,12 +50,7 @@ class DepthBufferCombinerStage:
         self.output_depth_buffer.init(self.context, depth_buffer_b.geometry)
         self.shader_module = self.context.load_shader("depth_buffer.wgsl", "combine_overlap.wgsl")
 
-        self.output_layout = self.device.create_bind_group_layout(
-            entries=[
-                self.output_depth_buffer.data_buffer.bind_group_layout_entry(0),
-                self.output_depth_buffer.depth_buffer.bind_group_layout_entry(1),
-            ]
-        )
+        self.output_layout = self.output_depth_buffer.binding_group_layout(with_geometry=False)
         self.pipeline_layout = self.device.create_pipeline_layout(
             bind_group_layouts=[
                 self.depth_buffer_a.my_layout,
@@ -67,12 +62,9 @@ class DepthBufferCombinerStage:
             layout=self.pipeline_layout,
             compute={"module": self.shader_module, "entry_point": "main"},
         )
-        self.output_group = self.device.create_bind_group(
+        self.output_group = self.output_depth_buffer.binding_group(
             layout=self.output_layout,
-            entries=[
-                self.output_depth_buffer.data_buffer.binding_group_entry(0),
-                self.output_depth_buffer.depth_buffer.binding_group_entry(1),
-            ],
+            with_geometry=False,
         )
 
     def combine(self) -> None:
