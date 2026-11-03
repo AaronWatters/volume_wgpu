@@ -4,7 +4,8 @@ import numpy as np
 from PIL import Image
 
 from volume_wgpu import GPUContext
-from volume_wgpu.gpu.combine_overlap import DepthBufferCombinerStage, create_depth_buffer
+from volume_wgpu.gpu.combine_overlap import DepthBufferCombinerStage
+from volume_wgpu.gpu.depth_buffer import create_depth_buffer
 from volume_wgpu.gpu.depth_buffer import DepthBufferGeometry
 
 

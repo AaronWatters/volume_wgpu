@@ -1,34 +1,10 @@
 from __future__ import annotations
 
-import numpy as np
-
 from ..context import GPUContext
-from .depth_buffer import DepthBuffer, DepthBufferGeometry
+from .depth_buffer import DepthBuffer, DepthBufferGeometry, create_depth_buffer
 
 
 WORKGROUP_SIZE = 64
-
-
-def create_depth_buffer(
-    context: GPUContext,
-    geometry: DepthBufferGeometry,
-    data: np.ndarray,
-    depth: np.ndarray,
-) -> DepthBuffer:
-    """Create and initialize a GPU depth buffer from 2D float32 arrays."""
-    width = int(geometry.width)
-    height = int(geometry.height)
-    data = np.ascontiguousarray(data, dtype=np.float32)
-    depth = np.ascontiguousarray(depth, dtype=np.float32)
-    expected_shape = (height, width)
-    if data.shape != expected_shape or depth.shape != expected_shape:
-        raise ValueError(f"Data and depth arrays must have shape {expected_shape}.")
-    geometry.write()
-    result = DepthBuffer()
-    result.init(context, geometry)
-    result.write_data(data.ravel())
-    result.write_depth(depth.ravel())
-    return result
 
 
 class DepthBufferCombinerStage:

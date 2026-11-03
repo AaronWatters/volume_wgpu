@@ -5,8 +5,8 @@ import pytest
 from numpy.testing import assert_allclose
 
 from volume_wgpu import GPUContext
-from volume_wgpu.gpu.combine_overlap import DepthBufferCombinerStage, create_depth_buffer
-from volume_wgpu.gpu.depth_buffer import DepthBufferGeometry
+from volume_wgpu.gpu.combine_overlap import DepthBufferCombinerStage
+from volume_wgpu.gpu.depth_buffer import DepthBufferGeometry, create_depth_buffer
 from volume_wgpu.reference.combine_overlap import DepthBufferCombinerStage as ReferenceCombiner
 from volume_wgpu.reference.depth_buffer import DepthBuffer as ReferenceDepthBuffer
 from volume_wgpu.reference.depth_buffer import DepthGeometry
