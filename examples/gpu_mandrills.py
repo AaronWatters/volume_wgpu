@@ -12,6 +12,7 @@ from volume_wgpu.gpu.depth_buffer import DepthBufferGeometry
 def main() -> None:
     examples_dir = Path(__file__).parent
     image = np.array(Image.open(examples_dir / "mandrill.png").convert("RGB").getchannel("R"))
+    print(f"Loaded image with shape {image.shape}")
     height, width = image.shape
     context = GPUContext()
     geometry_a = DepthBufferGeometry(context, width, height, dx=1.0 / width, dy=1.0 / height)
@@ -33,9 +34,11 @@ def main() -> None:
     combiner = DepthBufferCombinerStage(buffer_a, buffer_b, context=context)
     combiner.combine()
     values = combiner.get_output().get_data_numpy_array()
+    out_path = examples_dir / "out_mandrills_gpu.png"
     Image.fromarray(np.clip(values, 0.0, 255.0).astype(np.uint8)).save(
-        examples_dir / "out_mandrills_gpu.png"
+        out_path
     )
+    print(f"Output saved to {out_path}")
 
 
 if __name__ == "__main__":
