@@ -19,11 +19,16 @@ struct DepthBufferLocation {
 };
 
 // Analogous operations to reference/depth_buffer.py
-fn X_to_L(X_: vec3<f32>, geometry: DepthBufferGeometry) -> vec2<u32> {
-    let L = u32((X_.x - geometry.x0) / geometry.dx);
-    let M = u32((X_.y - geometry.y0) / geometry.dy);
-    let Z = u32(X_.z);
-    return vec2<u32>(L, M);
+// Keep as float to allow use with ceil or floor.
+fn X_to_L(X_: vec3<f32>, geometry: DepthBufferGeometry) -> vec2<f32> {
+    let L = (X_.x - geometry.x0) / geometry.dx;
+    let M = (X_.y - geometry.y0) / geometry.dy;
+    return vec2<f32>(L, M);
+};
+
+// u32 versions of X_to_L and L_to_X for integer coordinates
+fn X_to_L_u32(X_: vec3<f32>, geometry: DepthBufferGeometry) -> vec2<u32> {
+    return vec2<u32>(X_to_L(X_, geometry));
 };
 
 fn L_to_X(L_: vec2<u32>, geometry: DepthBufferGeometry) -> vec3<f32> {
@@ -62,7 +67,7 @@ fn L_location(L_: vec3<u32>, geometry: DepthBufferGeometry) -> DepthBufferLocati
 };
 
 fn X_location(X_: vec3<f32>, geometry: DepthBufferGeometry) -> DepthBufferLocation {
-    let L = X_to_L(X_, geometry);
+    let L = X_to_L_u32(X_, geometry);
     let valid = L_valid(L, geometry);
     let offset = L_offset(L, geometry);
     let z = 0.0;
@@ -71,13 +76,14 @@ fn X_location(X_: vec3<f32>, geometry: DepthBufferGeometry) -> DepthBufferLocati
 };
 
 fn X_offset(X_: vec3<f32>, geometry: DepthBufferGeometry) -> u32 {
-    let L = X_to_L(X_, geometry);
+    let L = X_to_L_u32(X_, geometry);
     return L_offset(L, geometry);
 };
 
 fn L_extent(X1: vec3<f32>, X2: vec3<f32>, geometry: DepthBufferGeometry) -> vec4<u32> {
-    let L1 = X_to_L(X1, geometry);
-    let L2 = X_to_L(X2, geometry);
+    // xxx this should use floor and ceil to properly cover the extent in integer coordinates
+    let L1 = X_to_L_u32(X1, geometry);
+    let L2 = X_to_L_u32(X2, geometry);
     let L_min = vec2<u32>(min(L1.x, L2.x), min(L1.y, L2.y));
     let L_max = vec2<u32>(max(L1.x, L2.x), max(L1.y, L2.y));
     return vec4<u32>(L_min.x, L_min.y, L_max.x, L_max.y);

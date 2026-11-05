@@ -96,6 +96,11 @@ class DepthBuffer:
         """Write the depth values to the GPU buffer."""
         self.depth_buffer.write(depth)
 
+    def init_constants(self, data_value, depth_value):
+        """Initialize the data and depth buffers with constant values."""
+        self.data_buffer.write_constant(data_value)
+        self.depth_buffer.write_constant(depth_value)
+
     def reshape_buffer_array(self, buffer_array: np.ndarray) -> np.ndarray:
         """Reshape a 1d buffer array to a 2d array with the correct dimensions."""
         return buffer_array.reshape((self.geometry.height, self.geometry.width))

@@ -50,6 +50,11 @@ class Buffer:
             raise ValueError(f"Data size {data.size} does not match buffer size {self.f32size}.")
         self.device.queue.write_buffer(self.buffer, 0, data.tobytes())
 
+    def write_constant(self, value):
+        """Write a constant value to the GPU buffer."""
+        data = np.full(self.f32size, value, dtype=np.float32)
+        self.write(data)
+
     def __del__(self):
         """Clean up the GPU buffer."""
         if hasattr(self, "buffer") and self.buffer is not None:
